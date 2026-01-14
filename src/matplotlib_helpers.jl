@@ -66,7 +66,7 @@ function using_Py( enforce_local_conda=true )
         end
 end
 
-function setup_rc_reset_and_check()
+function setup_rc_reset()
     _mpl = PyPlot.matplotlib
     _rc  = _mpl["rcParams"]
     _pget(key::String) = _rc[:get](key, "(missing)")   # Python dict get(key, default)
@@ -77,12 +77,12 @@ function setup_rc_reset_and_check()
     _mpl[:rcdefaults]()
     
     # 5) Print concise sanity info (safe getters)
-    println("Python     : ", current_py)
-    println("Matplotlib : ", pyimport("matplotlib").__version__, " | backend=", PyPlot.matplotlib.get_backend())
-    println("Sizes (pt) : label=", _pget("axes.labelsize"),
-            "  tick=", _pget("xtick.labelsize"),
-            "  legend=", _pget("legend.fontsize"))
-    println(" setup and check complete. exiting...\n")
+    # println("Python     : ", current_py)
+    # println("Matplotlib : ", pyimport("matplotlib").__version__, " | backend=", PyPlot.matplotlib.get_backend())
+    # println("Sizes (pt) : label=", _pget("axes.labelsize"),
+    #         "  tick=", _pget("xtick.labelsize"),
+    #         "  legend=", _pget("legend.fontsize"))
+    # println(" setup and check complete. exiting...\n")
     return nothing
 end
 
