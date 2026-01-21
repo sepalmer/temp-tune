@@ -581,8 +581,155 @@ function plot_contour_fig_2(df_mean_fits_all_Ns_ng,
     
     return fig, im11, im22
 end
-
+function plot_toy_probs_dkls(ax, sub_dkls, N_states, true_probs, pfit, freqs
+        ; ylabelsize=12 , xlabelsize=12 , 
+        ticksize=12, leg1size=10, leg2size=8, ylimss1=(0,0.65),ylimss2=(0,1.3) )
     
+steelblue_rgba=(matplotlib.colors.to_rgba("steelblue")[1:3]...,0.5)
+sss="indianred"
+coral_rgba=(matplotlib.colors.to_rgba(sss)[1:3]..., 0.5)
+coral_rgb1=matplotlib.colors.to_rgba(sss)
+olive_drab_rgba = (matplotlib.colors.to_rgba("goldenrod")[1:3]...,0.3)    
+    
+# ax[1].set_ylim(0,0.625)
+ax[1].bar(collect(1:N_states), true_probs[m_to_l], label="true", color=olive_drab_rgba, ec="black", lw=1.);
+# bar(collect(1:N_states).+0.01, freqs, alpha=0.5, color="yellow", label="sample" );
+ax[1].bar(collect(1:N_states), pfit[m_to_l], alpha=0.5, color="black", label="fit", ec="black", lw=1.);
+# # plot(collect(1:N_states),1.1maximum(pfit)*(.! Bool.(σs)), ".")
+ax[1].plot(collect(1:N_states),freqs[m_to_l], linewidth=0, marker="o", 
+    markersize = 5, color="black", markeredgecolor="k", label="samples")
+for (x, f) in zip(collect(1:N_states), freqs[m_to_l])
+    ax[1].vlines(x, 0, f, linestyle="--", color="k")
+end
+ax[1].set_xticks(collect(1:N_states))
+ax[1].spines["right"].set_visible(false)
+ax[1].spines["top"].set_visible(false)
+ax[1].legend(frameon=false)
+ax[1].set_xlabel("state index")#, fontsize=xlabelsize)
+ax[1].set_ylabel("probability")#, fontsize=ylabelsize)
+ax[1].tick_params(axis="both", which="major")#, labelsize=14)
+
+
+ax2width=0.6
+br=ax[2].bar(collect(2), sub_dkls["forward"][2], 
+    label=L"D_{KL}(\mathbf{p}||\hat \mathbf{q})"*" per state", color=coral_rgba, 
+    ec=coral_rgb1, width=ax2width , lw=1,
+        hatch="\\\\");
+bb=ax[2].bar(collect(1.:2:3), sub_dkls["reversed"][1:2:3], color=steelblue_rgba, 
+    label=L"D_{KL}(\hat \mathbf{q}||\mathbf{p})"*" per state", ec="steelblue",
+        width=ax2width, lw=1,
+        hatch="\\\\");
+    
+    
+# @show br
+br[1]._hatch_color=matplotlib.colors.to_rgba("white")
+for ll in 1:length(bb)
+    bb[ll]._hatch_color = matplotlib.colors.to_rgba("white")
+end
+    
+ax[2].legend(frameon=false, 
+        # fontsize=leg#2size, 
+        handletextpad=0.2)
+
+# vlines( 1, 0.8*minimum([dkl_blue; dkl_red]) , 1.1*maximum([dkl_blue;dkl_red]), color="k", 
+#     label="inferred")
+ax[2].set_xticks(collect(1:3))
+lblss=["low\nenergy\nstates", "missed\n\n                  high energy states", "found"]
+ax[2].set_xticklabels(lblss)#, fontsize=ticksize)
+ax[2].spines["left"].set_visible(false)
+ax[2].spines["top"].set_visible(false)
+ax[2].tick_params(axis="x", which="major", 
+        #labelsize=ticksize, 
+        pad=0, bottom = false)
+ax[2].tick_params(axis="y", which="major")
+        #, labelsize=ticksize)
+ax[2].yaxis.tick_right()
+ax[2].yaxis.set_label_position("right")
+ax[2].set_ylabel("nats")
+    #, fontsize=ylabelsize)
+ax[2].spines["bottom"].set_position("zero")
+
+ax[2].tick_params(axis="both")
+    #, labelsize=ticksize)
+ax[1].tick_params(axis="both")
+    #, labelsize=ticksize)
+    
+ax[1].set_ylim(ylimss1)
+ax[2].set_ylim(ylimss2)
+    
+end
+function toy_tau_plots(ax, tau_fits, sub_dkls_tau ; ylabelsize=8,xlabelsize=8, ticklabelsize=8, ax1_leg_loc=(0.1,0.1), ax2_leg_loc=(0.41,0.675), ax1legsize=8,ax2legsize=8)
+    lstyles = [(0,(1,1)),(0,(5,1)), "-","-",""]
+    zords = [10,11,8,20]
+    alphs=[1,1,1.,0.5]
+    ax[1].set_ylim(-0.4,2.)
+    ax[1].plot( tau_fits, sub_dkls_tau["forward"]["total"], 
+        color="indianred", label = L"D_{KL}(\mathbf{p}||\hat \mathbf{q}(\hat{\Delta}/\tau ))")
+    ax[1].plot( tau_fits, sub_dkls_tau["reversed"]["total"], 
+        color="steelblue", label= L"D_{KL}(\hat \mathbf{q}(\hat\Delta/\tau) ||\mathbf{p})")
+
+    ax[1].legend(frameon=false, loc=ax1_leg_loc, fontsize=ax1legsize, 
+        handletextpad=0.2, handlelength=1.05, labelspacing=0.1)
+    
+    ax[1].set_ylim(-0.25,2)
+    ax[1].set_xlim(0.4,1.6)
+    plt.sca(ax[1])
+
+    colorss = ["k", "k","k","indianred", "grey"]
+    lls=[]
+    for (j,key) in enumerate( dkl_keys ) 
+        (j == 5 ) && continue 
+        append!(lls,ax[2].plot( tau_fits, sub_dkls_tau["forward"][key], c=colorss[j],  label=key,
+            linestyle=lstyles[j], zorder=zords[j], alpha=alphs[j] ))
+    end
+    tau_min_red, dkl_min_val = (tau_fits[findmin(sub_dkls_tau["forward"]["total"])[2]], 
+        findmin(sub_dkls_tau["forward"]["total"])[1])
+    ax[2].plot( tau_min_red , dkl_min_val, ".k" ,markersize=5)
+    ax[2].vlines( tau_min_red, -5,5, "k", alpha=0.15)
+    # ax[3].legend( (lls[1:3]), ["found ground", "missed ground", "excited"], frameon=false, handlelength=0.4,
+    #     handletextpad=0.25, loc=ax2_leg_loc, fontsize=ax2legsize )
+
+    # plt.grid("on")
+
+    colorss = ["k", "k","k","steelblue", "grey"]
+    lls=[]
+    for (j,key) in enumerate( dkl_keys ) 
+        (j == 5 ) && continue 
+        append!(lls, ax[3].plot( tau_fits, sub_dkls_tau["reversed"][key], c=colorss[j],  label=key,
+            linestyle=lstyles[j], zorder=zords[j], alpha=alphs[j] ))
+    end
+    tau_min_blue, dkl_min_val_b = (tau_fits[findmin(sub_dkls_tau["reversed"]["total"])[2]], 
+        findmin(sub_dkls_tau["reversed"]["total"])[1])
+    plt.sca(ax[1])
+    ax[3].plot( tau_min_blue , dkl_min_val_b, ".k", markersize=5,lw=1 )
+    ax[3].vlines( tau_min_blue, -5,5, "k", alpha=0.15, lw=1)
+    ax[3].vlines( tau_min_red, -5,5, "k", alpha=0.05, lw=1)
+    ax[3].legend( (lls[1:3]), ["found low", "missed low", "high"], frameon=false, handlelength=1.05,
+        handletextpad=0.2, loc=ax2_leg_loc, fontsize=ax2legsize, labelspacing=0.1 )
+
+
+    ax[2].set_xlabel("sampling temperature "*L"\tau", fontsize=xlabelsize)
+    # legend()
+
+    for a in ax
+        a.vlines(1, -5,5, "k", alpha=0.05, lw=1)
+    end
+
+    plt.sca(ax[1])
+    
+    ax[1].set_ylabel("nats", fontsize=ylabelsize)
+    ax[1].plot( tau_min_red , dkl_min_val, ".k" ,markersize=5, lw=1)
+    ax[1].vlines( tau_min_red, -5,5, "k", alpha=0.15,lw=1)
+    ax[1].vlines( tau_min_blue, -5,5, "k", alpha=0.15,lw=1)
+    ax[1].plot( tau_min_blue , dkl_min_val_b, ".k", markersize=5,lw=1 )
+    ax[2].vlines( tau_min_blue, -5,5, "k", alpha=0.05,lw=1)
+    
+    for a in ax
+        a.tick_params(axis="both")#, labelsize=ticklabelsize)
+        # a.minorticks_on()
+    end
+end
+
 """
 other functions
 """
