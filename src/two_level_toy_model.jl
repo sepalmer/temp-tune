@@ -168,7 +168,6 @@ fit_n_ground_and_Δ_hard_constraint( p_emp, n_training_samps;
 functions for sweeping over many replicates of sampling and fitting from ground truth distribution
 """
 
-
 function run_sweeps_for_1_value_of_Ns_and_ng(Deltas, Ms, nlevels,nexcited,nground,nreps, N_states)
     df_sweep_Delta_M = DataFrame(Δ=Float64[], M=Float64[], n_g = Float64[], N_s = Float64[],
                                         Δ̂=Float64[], n̂_g=Float64[], 
@@ -304,13 +303,13 @@ function save_contour_fig(all_mean_delta_hat, all_mean_n_g_hat, Ms, tau_stars, t
     # tau_stars[tau_stars.>5].=NaN
     cc=ax[3].contourf( (log10.(Ms)) , Deltas, tau_stars  , ncontours, cmap = "bwr", vmin=1-epss,vmax=1+epss)
     cbb=colorbar(cc, orientation="vertical", location="right")
-    clns=ax[3].contour( (log10.(Ms)) , Deltas, round.(tau_stars,digits=3)  , [1.0], linewidths=0)
-    coll=clns.collections[]
+    # clns=ax[3].contour( (log10.(Ms)) , Deltas, round.(tau_stars,digits=3)  , [1.0], linewidths=0)
+    # coll=clns.collections[]
     
-    x,y = get_phase_line(coll.get_paths())
-    coll.set_paths(Vector{PyPlot.PyObject}())
-    phase_line = (x,y)
-    ax[3].plot(x,y)
+    # x,y = get_phase_line(coll.get_paths())
+    # coll.set_paths(Vector{PyPlot.PyObject}())
+    # phase_line = (x,y)
+    # ax[3].plot(x,y)
 
     # @show clns.lines
 
@@ -325,7 +324,7 @@ function save_contour_fig(all_mean_delta_hat, all_mean_n_g_hat, Ms, tau_stars, t
     # ax[3].hlines((nexcited/nground)*exp(-0.15), ax[3].get_xlim()...)
     # ax[3].vlines(log10(nground+nexcited*exp(-0.15)), ax[3].get_ylim()...)
 
-    ax[3].plot(x,y)
+    # ax[3].plot(x,y)
 
     for a in ax
         a.set_xlim(0.57,4.450002630173186)
@@ -348,9 +347,9 @@ function save_contour_fig(all_mean_delta_hat, all_mean_n_g_hat, Ms, tau_stars, t
     
     fig.suptitle("Ns=$N_states nground=$nground")
     
-    savefig(projectdir()*"/temp_analysis/"*dirstring*"/Nstates=$(N_states)_nground=$nground.png")
+    savefig(datadir(dirstring*"/Nstates=$(N_states)_nground=$nground.png"))
     
-    return fig, phase_line
+    return fig #, phase_line
 end
 
 # function get_tau_stars(Ms, all_mean_n_g_hat, all_mean_delta_hat,
@@ -400,8 +399,8 @@ function run_sweep_constant_N_states_vary_nground(N_states,fraction_nground::Vec
                                         all_mean_n_g_hat=[], 
                                         all_mean_delta_hat=[], 
                                         all_mean_LL=[], 
-                                        all_tau_star=[], 
-                                        all_tau_prime=[], 
+                                        tau_stars=[], 
+                                        tau_primes=[], 
                                         all_std_n_g_hat=[], 
                                         all_std_delta_hat =[], 
                                         all_std_LL =[],
@@ -410,20 +409,22 @@ function run_sweep_constant_N_states_vary_nground(N_states,fraction_nground::Vec
                                         phase_line=[] ) 
 
     for frac_ng in fraction_nground
-        @printf "%f\n" frac_ng
+        @printf "running sims for frac ground states = %f\n" frac_ng
 
         nground = Int(round(frac_ng*N_states))
 
         nexcited = N_states - nground
         
         fnamee="Nstates=$(N_states)_nground=$nground.jld2"
-        fpathh=joinpath(projectdir(),"temp_analysis",dirstring, fnamee)
+        fpathh=joinpath(datadir(),dirstring, fnamee)
+        
+        phase_line=nothing
         
         if isfile(fpathh)
             @printf "%s has already been run. skipping.\n" fpathh
             temp_dict=load( fpathh )
             push!( df_mean_fits_all_Ns_ng, temp_dict["sweep_data"])
-            fig, phase_line = save_contour_fig( df_mean_fits_all_Ns_ng.all_mean_delta_hat[end][], 
+            fig = save_contour_fig( df_mean_fits_all_Ns_ng.all_mean_delta_hat[end][], 
                                     df_mean_fits_all_Ns_ng.all_mean_n_g_hat[end][], 
                                     Ms, df_mean_fits_all_Ns_ng.all_tau_star[end][], 
                                     df_mean_fits_all_Ns_ng.all_tau_prime[end][],
@@ -446,7 +447,7 @@ function run_sweep_constant_N_states_vary_nground(N_states,fraction_nground::Vec
 
         all_mean_n_g_hat, all_mean_delta_hat, all_mean_LL, all_tau_star, all_tau_prime, all_std_n_g_hat , all_std_delta_hat , all_std_LL,all_tau_star_std, all_tau_prime_std = make_arrays_for_contour(df_mean_fits, Deltas, nground, N_states)
 
-        fig, phase_line = save_contour_fig(all_mean_delta_hat, all_mean_n_g_hat, 
+        fig = save_contour_fig(all_mean_delta_hat, all_mean_n_g_hat, 
                                     Ms, all_tau_star, all_tau_prime,
                                     N_states, nground, nexcited, Deltas,
                                     dirstring)
@@ -459,10 +460,9 @@ function run_sweep_constant_N_states_vary_nground(N_states,fraction_nground::Vec
                 [all_tau_star_std], [all_tau_prime_std],
                 [phase_line] ]
 
-        push!( df_mean_fits_all_Ns_ng, topushh)
+        push!( df_mean_fits_all_Ns_ng, topushh )
 
-        fnamee="Nstates=$(N_states)_nground=$nground.jld2"
-        jldsave( joinpath(projectdir(),"temp_analysis",dirstring, fnamee), 
+        jldsave( fpathh, 
             sweep_data=topushh )
 
         # fname_raw_data="Nstates=$(N_states)_nground=$(nground)_raw_data.csv"
@@ -470,6 +470,118 @@ function run_sweep_constant_N_states_vary_nground(N_states,fraction_nground::Vec
     end
     return df_mean_fits_all_Ns_ng
 end
+
+"""
+plotting functions
+"""
+function plot_contour_fig_2(df_mean_fits_all_Ns_ng,
+                            N_states, nground, nexcited, Deltas, Ms, ax;
+                               ticklabelsize=12, ylabelsize=22, xlabelsize=22, cbarlabelsize=14 )
+    # fig, ax = subplots(2,1, figsize=(4,7), sharey=true, sharex=true, dpi=300)
+    ax=ax[:]
+    normmm=PyPlot.matplotlib.colors.TwoSlopeNorm(vmin=0.5,
+                                        vmax=3,
+                                        # vmax=maximum(all_taus[Ts_idxx,Ms_idxx]),
+                                        vcenter=1)
+    # ax[1].set_xlim(0.86,4.1)
+    function filt_func( n_gg, N_ss )
+        (n_gg == nground) && (N_ss == N_states)
+    end
+    df_temp = filter( [:nground, :N_states] => filt_func, df_mean_fits_all_Ns_ng )
+    xidxxss=7:29
+    all_mean_delta_hat=df_temp.all_mean_delta_hat[][][:,xidxxss]
+    all_mean_n_g_hat=df_temp.all_mean_n_g_hat[][][:,xidxxss]
+    tau_stars=df_temp.tau_stars[][][:,xidxxss]
+    tau_primes=df_temp.tau_primes[][][:,xidxxss]
+    
+    Deltas = Deltas[xidxxss]
+
+    tau_stars[tau_stars.<0].=NaN
+    tau_primes[tau_primes.<0].=NaN 
+    
+    epss = 0.5
+
+
+    ncontours=200
+    @show size(all_mean_delta_hat')
+    @show size(Ms)
+    @show size(Deltas)
+    
+    end_idx=findfirst(.! (Ms  .< N_states))
+    Msidxs=10:(end_idx+1)
+    
+     mycmap2 = matplotlib.colors.LinearSegmentedColormap.from_list(
+    "teal_white_gray",
+    ["lightseagreen", "white", "mediumpurple"]  )
+    mycmap = matplotlib.colors.LinearSegmentedColormap.from_list(
+    "teal_white_gray",
+    ["mediumpurple","w" , "darkseagreen"])
+            # "#004c4c" ]  ) # dark teal → white → gray )
+    
+    im11=ax[1].pcolor( Ms[Msidxs] , Deltas, 
+        tau_primes'[:,Msidxs],
+        # (all_mean_delta_hat'./Deltas)[:,Msidxs] , 
+        cmap = mycmap ,
+        norm=normmm, rasterized=true)
+        # vmin=1-epss,vmax=1+epss)
+    # cbb=colorbar(cc, orientation="vertical", location="right", ticks=[0.6,1,1.4])
+    # ax[1].set_title(label=L"{\hat\Delta}/ {\Delta}" ,size=20)
+    # ax[1].set_xscale("log")
+    # cbb.ax.set_xlabel("    "*L"{\hat\Delta}/ {\Delta}", fontsize=14 , rotation=0, labelpad=0.1)
+  
+
+    epss=1.
+    # @show size.([Ms, Deltas, tau_stars])
+    # mycmap2 = matplotlib.colors.LinearSegmentedColormap.from_list(
+    # "teal_white_gray",
+    # ["lightseagreen", "white", "mediumpurple"]  ) # dark teal → white → gray )
+    
+    im22=ax[2].pcolor( Ms[Msidxs] , Deltas, (tau_stars')[:,Msidxs]  , 
+            cmap = mycmap, 
+            norm=normmm, rasterized=true)
+            # vmin=1-epss,vmax=1+epss)
+    # ax[2].set_xscale("log")
+
+#     clns=ax[2].contour( (log10.(Ms)) , Deltas, round.(tau_stars,digits=3)'  , [1.0], linewidth=0)
+#     coll=clns.collections[]
+#     # @show coll
+    
+#     x,y = get_phase_line(coll.get_paths())
+#     coll.set_paths(Vector{PyPlot.PyObject}())
+#     phase_line = (x,y)
+    # ax[3].plot(x,y)
+
+    # @show clns.lines
+
+    
+    
+    # cbb=colorbar(cc, orientation="vertical", location="right", ticks=[0.6,1,1.4])
+    # ax[2].set_title("opt τ (for reverse "*L"D_{KL}"*")" , size=13)
+    # cbb.ax.set_xlabel("    "*L"\tau^*", fontsize=cbarlabelsize, rotation=0, labelpad=0.1) 
+    # cbb.ax.xaxis.set_label_position("bottom")
+
+#     for a in ax
+#         a.set_xlim(0.57,4.450002630173186)
+#         a.set_ylim(minimum(Deltas), maximum(Deltas))
+#         a.set_ylabel("Δ", fontsize=20, rotation ="horizontal", labelpad=20)
+#     end
+    ax[2].set_xlabel("training data size "*L"M", fontsize=xlabelsize)
+
+
+    ax[1].set_ylabel("ground truth "*L"Δ")
+    ax[2].set_ylabel("ground truth "*L"Δ")
+    
+    for a in ax
+        a.tick_params(axis="both", labelsize=ticklabelsize)
+        # a.minorticks_on()
+    end
+
+    fig.subplots_adjust(hspace=0.35)
+    # savefig(projectdir()*"/temp_analysis/"*dirstring*"/Nstates=$(N_states)_nground=$nground.png")
+    
+    return fig, im11, im22
+end
+
     
 """
 other functions
