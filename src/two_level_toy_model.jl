@@ -426,8 +426,8 @@ function run_sweep_constant_N_states_vary_nground(N_states,fraction_nground::Vec
             push!( df_mean_fits_all_Ns_ng, temp_dict["sweep_data"])
             fig = save_contour_fig( df_mean_fits_all_Ns_ng.all_mean_delta_hat[end][], 
                                     df_mean_fits_all_Ns_ng.all_mean_n_g_hat[end][], 
-                                    Ms, df_mean_fits_all_Ns_ng.all_tau_star[end][], 
-                                    df_mean_fits_all_Ns_ng.all_tau_prime[end][],
+                                    Ms, df_mean_fits_all_Ns_ng.tau_stars[end][], 
+                                    df_mean_fits_all_Ns_ng.tau_primes[end][],
                                     N_states, 
                                     nground, nexcited, 
                                     Deltas,
