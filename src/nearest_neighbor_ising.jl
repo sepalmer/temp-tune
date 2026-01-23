@@ -289,7 +289,58 @@ function init_2dNN(m::Int, n::Int ; similarto=Float64[])
     zerosum!(θ)
     return θ, eltype(θ).(Matrix(J_ising))
 end
-
+"""
+exact sampler
+"""
+function get_true_prob(ml_exact_buffer, Jtrue)
+    (; all_states, all_states_energy, exp_neg_energies) = ml_exact_buffer
+    
+    all_states_energy.=energy2spin(all_states, Jtrue)
+    @. exp_neg_energies=exp(-all_states_energy)
+        
+    exp_neg_energies ./ sum(ml_exact_buffer.exp_neg_energies)
+end
+function drawsamples_exact(ml_exact_buffer, Jtrue, temp, nsamples)
+    (; all_states, all_states_energy, exp_neg_energies) = ml_exact_buffer
+    all_states_energy.=energy2spin(all_states, Jtrue./temp)
+    @. exp_neg_energies=exp(-all_states_energy)
+    all_states_idxs = collect(1:length(all_states_energy))
+    samples_idxs = StatsBase.sample( 
+        all_states_idxs,
+        Weights( exp_neg_energies ./ sum(ml_exact_buffer.exp_neg_energies) ), 
+        nsamples )
+    return all_states[:,samples_idxs]
+end
+"""
+exact entropy calculations
+"""
+function heat_capacities_exact( Jij, temp, ml_exact_buffer_for_C )
+    (; all_states, all_states_energy, Z, exp_neg_energies ) = ml_exact_buffer_for_C
+    all_states_energy .= energy2spin(all_states, Jij )
+    exp_neg_energies .= exp.(-all_states_energy./temp)
+    sum!(Z, exp_neg_energies)
+    p = exp_neg_energies ./ Z
+    E_mean = sum(p.*all_states_energy)
+    ΔE² = (all_states_energy .- E_mean) .^2
+    C = sum(p .* ΔE²) / (temp^2)
+end
+function entropy_exact( ml_exact_buffer, Jtrue , true_temp)
+    p2=energy2spin(ml_exact_buffer.all_states, Jtrue./true_temp)
+    p2=p2.-minimum(p2)
+    p2=exp.(-p2)
+    p2./=sum(p2)
+    ent = -sum(p2.*log.(p2))
+    return ent
+end
+function dkl_p_rand_with_p_true( ml_exact_buffer, Jtrue , true_temp )
+    N=size(Jtrue,1)
+    p2=energy2spin(ml_exact_buffer.all_states, Jtrue./true_temp)
+    p2=p2.-minimum(p2)
+    p2=exp.(-p2)
+    p2./=sum(p2)
+    Hrand=N*log(2) 
+    return -Hrand - (1/(2^N))*sum( log.(p2) )
+end
 """
 misc funcs
 """
@@ -374,55 +425,4 @@ function get_dkl_per_level(pemp, ml_exact_buffer, level_index_dict;
     end
     return dkls_per_lev
 end
-"""
-exact entropy calculations
-"""
-function heat_capacities_exact( Jij, temp, ml_exact_buffer_for_C )
-    (; all_states, all_states_energy, Z, exp_neg_energies ) = ml_exact_buffer_for_C
-    all_states_energy .= energy2spin(all_states, Jij )
-    exp_neg_energies .= exp.(-all_states_energy./temp)
-    sum!(Z, exp_neg_energies)
-    p = exp_neg_energies ./ Z
-    E_mean = sum(p.*all_states_energy)
-    ΔE² = (all_states_energy .- E_mean) .^2
-    C = sum(p .* ΔE²) / (temp^2)
-end
-function entropy_exact( ml_exact_buffer, Jtrue , true_temp)
-    p2=energy2spin(ml_exact_buffer.all_states, Jtrue./true_temp)
-    p2=p2.-minimum(p2)
-    p2=exp.(-p2)
-    p2./=sum(p2)
-    ent = -sum(p2.*log.(p2))
-    return ent
-end
-function dkl_p_rand_with_p_true( ml_exact_buffer, Jtrue , true_temp )
-    N=size(Jtrue,1)
-    p2=energy2spin(ml_exact_buffer.all_states, Jtrue./true_temp)
-    p2=p2.-minimum(p2)
-    p2=exp.(-p2)
-    p2./=sum(p2)
-    Hrand=N*log(2) 
-    return -Hrand - (1/(2^N))*sum( log.(p2) )
-end
-"""
-exact sampler
-"""
-function get_true_prob(ml_exact_buffer, Jtrue)
-    (; all_states, all_states_energy, exp_neg_energies) = ml_exact_buffer
-    
-    all_states_energy.=energy2spin(all_states, Jtrue)
-    @. exp_neg_energies=exp(-all_states_energy)
-        
-    exp_neg_energies ./ sum(ml_exact_buffer.exp_neg_energies)
-end
-function drawsamples_exact(ml_exact_buffer, Jtrue, temp, nsamples)
-    (; all_states, all_states_energy, exp_neg_energies) = ml_exact_buffer
-    all_states_energy.=energy2spin(all_states, Jtrue./temp)
-    @. exp_neg_energies=exp(-all_states_energy)
-    all_states_idxs = collect(1:length(all_states_energy))
-    samples_idxs = StatsBase.sample( 
-        all_states_idxs,
-        Weights( exp_neg_energies ./ sum(ml_exact_buffer.exp_neg_energies) ), 
-        nsamples )
-    return all_states[:,samples_idxs]
-end
+
