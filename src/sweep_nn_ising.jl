@@ -736,6 +736,93 @@ function get_tau_opt_df( tau_sweep_opts::TauSweepOptions, df_means_and_splines )
     end
     return df_tau_opt_DeltaDkl
 end
+function decompose_dkls_ising( J_gt, J_fit, ml_bf, e_bf, T_true )
+
+    all_e_dict = get_all_e_dict( J_gt, J_fit, ml_bf, e_bf )
+
+    avg_prob_per_e_level = Dict(:fit => [], :gt=>[])
+    rel_surprise_per_e_level = Dict(:fit => [], :gt=>[])
+    rel_surpise = Dict(:fit => [], :gt=>[])
+    
+    # @show all_e_dict[:e_levels]
+
+    for (i,e) in enumerate(all_e_dict[:e_levels])
+        for keyy in [:fit, :gt]
+            avg_prob_i =  get_avg_prob_per_level( i, all_e_dict, ml_bf ,T_true; fit_or_gt = keyy)
+            append!( avg_prob_per_e_level[keyy] , avg_prob_i )
+            
+            avg_rel_surpise_i = get_avg_rel_surprise( i, all_e_dict, ml_bf,T_true ; fit_or_gt = keyy)
+            append!( rel_surprise_per_e_level[keyy] , avg_rel_surpise_i )
+            
+            append!( rel_surpise[keyy] , avg_rel_surpise_i*all_e_dict[:nstates_per_level][i] )
+        end
+    end
+
+    return all_e_dict, avg_prob_per_e_level, rel_surprise_per_e_level, rel_surpise
+end
+function get_all_e_dict( J_gt, J_fit, ml_bf, e_bf )
+    if size(J_gt) != size(J_fit)
+        @error "J_gt and J_fit are not the same dimensions!"
+    end
+    (; all_states, all_states_energy, exp_neg_energies, Z) = ml_bf
+    all_e_gt, all_e_fit = ntuple( i->copy(all_states_energy), 2)
+    
+    all_e_gt  .= energy2spin( all_states, J_gt, e_bf ) 
+    all_e_fit .= energy2spin( all_states, J_fit, e_bf ) 
+    g_e = countmap(all_e_gt)
+    es = []
+    gs = []
+    for (k,v) in sort(g_e)
+        append!(es, k)
+        append!(gs, v)
+    end
+    all_e_dict = Dict( :J_fit => J_fit,
+        :J_gt => J_gt,
+        :all_e_gt => all_e_gt,
+        :all_e_fit => all_e_fit,
+        :e_levels => es,
+        :nstates_per_level => gs,
+        :n_levels => length(es)
+        )
+    return all_e_dict
+end
+function get_avg_prob_per_level( i, all_e_dict, ml_bf, T_true ; fit_or_gt = :fit) 
+    # i indexes the ith energy level under the ground truth
+    (; exp_neg_energies, Z) = ml_bf
+    
+    # define prob dist
+    dict_key = Symbol( "all_e_"*string(fit_or_gt) )
+    exp_neg_energies .= exp.( -all_e_dict[dict_key] )
+    exp_neg_energies = fit_or_gt == :gt ? exp.(-all_e_dict[dict_key]./T_true) : exp_neg_energies
+    Z.=sum(exp_neg_energies)
+    
+    S_i = vec(all_e_dict[:all_e_gt] .== all_e_dict[:e_levels][i])
+    
+    return sum( exp_neg_energies[S_i] ) / Z[] / all_e_dict[:nstates_per_level][i]
+end
+function get_avg_rel_surprise( i, all_e_dict, ml_bf, T_true; fit_or_gt = :fit) 
+    (; exp_neg_energies, Z) = ml_bf
+    
+    exp_neg_energies .= exp.(-all_e_dict[:all_e_fit])
+    Z.=sum(exp_neg_energies)
+    qs = exp_neg_energies./ Z
+    
+    # indices of states with E = E_i
+    S_i = vec(all_e_dict[:all_e_gt] .== all_e_dict[:e_levels][i])
+    
+    # true prob of E_i
+    Z_gt = sum( all_e_dict[:nstates_per_level] .* exp.(-all_e_dict[:e_levels]./T_true) )
+    p_i_gt = exp(-all_e_dict[:e_levels][i]/T_true) / Z_gt
+    
+    if fit_or_gt == :fit
+        #return avg over fit model
+        avg_rel_surpise = sum( qs[S_i] .* log.( qs[S_i] ./ p_i_gt ) )
+        return avg_rel_surpise / all_e_dict[:nstates_per_level][i]
+    elseif fit_or_gt == :gt
+        avg_rel_surpise = sum( p_i_gt .* log.( p_i_gt ./ qs[S_i] ) )
+        return avg_rel_surpise / all_e_dict[:nstates_per_level][i]
+    end
+end
 
 
 
