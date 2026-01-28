@@ -1,5 +1,9 @@
 # temp-tune
 
+This repository contains the code and materials for the paper “Understanding temperature tuning in energy-based models” by Peter William Fields, Vudtiwat Ngampruetikorn, David J. Schwab, and Stephanie E. Palmer. arXiv ID: 2512.09152, ( https://www.arxiv.org/pdf/2512.09152 )
+
+---
+
 This code base uses the [Julia Language](https://julialang.org/) and
 [DrWatson](https://juliadynamics.github.io/DrWatson.jl/stable/)
 to maintain a fully reproducible scientific project named
@@ -11,11 +15,9 @@ for all Python/Matplotlib functionality.
 
 ---
 
-The Jupyter notebooks use IJulia. This package is not in the project environment, so ensure that IJulia is installed in your global Julia environment if it is not already (e.g. via Pkg.add("IJulia")) before running the notebooks or activating the project. 
-
----
-
 ## Reproducing this project locally
+
+The Jupyter notebooks use IJulia. This package is not in the project environment, so ensure that IJulia is installed in your global Julia environment if it is not already (e.g. via Pkg.add("IJulia")) before running the notebooks or activating the project. 
 
 To (locally) reproduce this project, do the following.
 
