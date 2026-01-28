@@ -11,18 +11,21 @@ for all Python/Matplotlib functionality.
 
 ---
 
+The Jupyter notebooks use IJulia. This package is not in the project environment, so ensure that IJulia is installed in your global Julia environment if it is not already (e.g. via Pkg.add("IJulia")) before running the notebooks or activating the project. 
+
+---
+
 ## Reproducing this project locally
 
 To (locally) reproduce this project, do the following.
 
-### 0. Obtain the code
+#### 0. Obtain the code
 
-Clone or download this repository. Note that large raw datasets are typically not
-included in the git history and may need to be downloaded independently.
+Clone or download this repository.
 
 ---
 
-### 1. Open a Julia console and do:
+#### 1. Open a Julia console and do:
 
 ```julia
 using Pkg
@@ -48,19 +51,54 @@ This will:
 - `path/to/temp-tune` must be the root of this repository.
 - This setup step is **required once per clone**.
 - After this completes, **restart Julia** before doing any analysis.
+- The directory .conda/pkgs is a cache and may be safely deleted at any time to reclaim disk space.
+
+---
+
+## Data availability
+
+From the root of your cloned `temp-tune` repository, run:
+
+```bash
+# create data directory
+mkdir -p data
+cd data
+
+# install git-lfs if not already installed
+git lfs install
+
+# clone the dataset directly into the expected folder
+git clone https://huggingface.co/datasets/peter-fields/temp-tune-data ising_sweeps
+```
+This ensures the following directory structure required:
+```
+temp-tune/
+└── data/
+    └── ising_sweeps/
+        (data files here)
+```
+
+---
+
+## Minimum working examples
+
+Can be found for both nearest-neighbor Ising distribution and toy model experiments at:
+```
+temp-tune/notebooks/min_working_examples.ipynb
+```
 
 ---
 
 ## Using this project
 
-You may notice that most scripts start with:
+Start each script/notebook with:
 
 ```julia
 using DrWatson
 @quickactivate "temp-tune"
 ```
 
-which auto-activates the project and enables DrWatson’s local path handling.
+to activate the project and ensure local path handling is correct. 
 
 ---
 
@@ -84,7 +122,7 @@ This ensures that:
 - Matplotlib uses the project-local `.mplconfig`
 - all plotting settings are consistent and reproducible
 
-A project local install matplotlib will be used via the Julia Conda package. The directory .conda/pkgs is a cache and may be safely deleted at any time to reclaim disk space.
+A project local install matplotlib will be used via the Julia Conda package. 
 
 ---
 
