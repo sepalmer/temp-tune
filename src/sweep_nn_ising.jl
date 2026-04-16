@@ -488,9 +488,13 @@ function import_sweep_dicts( dir_name, M, T, mu )
     NSAMPS=Float64(M)
     all_sweep_files_strings=readdir(dir_name)
     tttlll = []
-    for swp_file_name in all_sweep_files_strings
-        swp_file_T = parse(Float64, split(swp_file_name, "_")[3][3:end])
-        if occursin(string(NSAMPS) , swp_file_name ) && ((swp_file_T==T) && occursin( string(mu), swp_file_name))
+    for swp_file_name in filter(f -> endswith(f, ".jld2"), all_sweep_files_strings)
+        parts = split(swp_file_name, "_")
+        length(parts) < 5 && continue
+        swp_file_T = parse(Float64, parts[3][3:end])
+        swp_file_mu = parts[2][4:end]
+        swp_file_nsamps = parse(Float64, parts[4][8:end])
+        if swp_file_nsamps == NSAMPS && swp_file_T == T && swp_file_mu == string(mu)
             T_vs_T̂_calcs_=JLD2.load(joinpath(dir_name,swp_file_name ) )
             append!(tttlll ,[T_vs_T̂_calcs_]) 
             # @show swp_file_name
