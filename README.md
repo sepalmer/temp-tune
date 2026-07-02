@@ -98,9 +98,11 @@ summary dicts committed alongside them (no separate download needed):
 - **`toy_model_appendix.ipynb`** — reproduces `newfig-working-1.pdf` (Appendix C, toy model:
   raising vs. lowering τ, κ vs. C). Data: `newfigdict.jld2`, `kappa_C_plot_dict.jld2`.
 - **`ising_appendix.ipynb`** — reproduces (i) **panels a–d of `nn_ising_kappa_C.pdf`** (Appendix C:
-  per-energy-level reversed D_KL and its τ-derivative at a low and a high ground-truth temperature)
-  and (ii) **`supp_fig_working-new.pdf`** (Appendix D: mean-over-replicates D_KL vs training-set
-  size M for several temperatures). Data: `hld_dict_for_last_figs.jld2`, `all_temp_level_dict.jld2`.
+  per-energy-level reversed D_KL and its τ-derivative at a low and a high ground-truth temperature),
+  (ii) **`supp_fig_working-new.pdf`** (Appendix D: mean-over-replicates D_KL vs training-set size M
+  for several temperatures), and (iii) the **data panels of `fig4-working-latest.pdf`** (Appendix D:
+  per-state probabilities, per-state reversed-D_KL contribution, per-level D_KL decomposition).
+  Data: `hld_dict_for_last_figs.jld2`, `all_temp_level_dict.jld2`.
 
 These reproduce the underlying panels; the published PDFs were composited in Inkscape.
 
@@ -108,11 +110,10 @@ The per-level D_KL data (`all_temp_level_dict.jld2`) came from an **independent 
 re-fitting sweep** (not a decomposition of the raw sweeps on Hugging Face), so it is committed here
 directly rather than pulled from the HF data.
 
-**Not yet migrated** (tracked for follow-up):
-- **Panel (e) of `nn_ising_kappa_C`** (C(τ=1), κ(τ=1) vs T) — recomputed in the source from the raw
-  fitted models via per-state heat-/cross-capacity functions.
-- **`fig4-working-latest.pdf`** (Appendix D) — per-state D_KL-bias panels; needs the `fig4_2` and
-  `make_hist_edges` helpers ported (they pull in the full Ising `src` + several globals).
+**Not yet migrated** (tracked for follow-up): **panel (e) of `nn_ising_kappa_C`** (C(τ=1), κ(τ=1) vs
+ground-truth T) — recomputed in the source from the raw fitted models via per-state
+heat-/cross-capacity. (Also: the faint energy-level gridlines in fig4 Panel A, from
+`make_hist_edges`, are omitted as cosmetic.)
 
 ---
 
