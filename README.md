@@ -95,25 +95,25 @@ temp-tune/notebooks/min_working_examples.ipynb
 Notebooks reproducing the appendix figures live in `notebooks/supplemental/`, driven by the small
 summary dicts committed alongside them (no separate download needed):
 
-- **`toy_model_appendix.ipynb`** — reproduces `newfig-working-1.pdf` (Appendix C, toy model:
-  raising vs. lowering τ, κ vs. C). Data: `newfigdict.jld2`, `kappa_C_plot_dict.jld2`.
-- **`ising_appendix.ipynb`** — reproduces (i) **panels a–d of `nn_ising_kappa_C.pdf`** (Appendix C:
-  per-energy-level reversed D_KL and its τ-derivative at a low and a high ground-truth temperature),
-  (ii) **`supp_fig_working-new.pdf`** (Appendix D: mean-over-replicates D_KL vs training-set size M
-  for several temperatures), and (iii) the **data panels of `fig4-working-latest.pdf`** (Appendix D:
-  per-state probabilities, per-state reversed-D_KL contribution, per-level D_KL decomposition).
-  Data: `hld_dict_for_last_figs.jld2`, `all_temp_level_dict.jld2`.
+- **`toy_model_appendix.ipynb`** — `newfig-working-1.pdf` (Appendix C, toy model: raising vs.
+  lowering τ, κ vs. C). Data: `newfigdict.jld2`, `kappa_C_plot_dict.jld2`.
+- **`nn_ising_kappa.ipynb`** — the full `nn_ising_kappa_C.pdf` (Appendix C), **panels a–e**:
+  per-level reversed D_KL and its τ-derivative at low/high T (a–d, from `hld_dict_for_last_figs.jld2`)
+  and C(τ=1)/κ(τ=1) vs ground-truth T (e). **Panel e recomputes from the fitted 4×4 models, so this
+  notebook needs the Ising sweeps in `data/ising_sweeps/constant_M_4by4/`** (see Data availability
+  above) and loads the heavier Ising `src`.
+- **`ising_appendix.ipynb`** — the Appendix-D figures: **`supp_fig_working-new.pdf`**
+  (mean-over-replicates D_KL vs M for several T) and the **data panels of `fig4-working-latest.pdf`**
+  (per-state probabilities, per-state reversed-D_KL contribution, per-level D_KL decomposition).
+  Data: `all_temp_level_dict.jld2`, `hld_dict_for_last_figs.jld2`. Light (plots from dicts only).
 
-These reproduce the underlying panels; the published PDFs were composited in Inkscape.
+These reproduce the underlying panels; the published PDFs were composited in Inkscape. Reproduced
+SVGs are written to `plots/supplemental/`.
 
 The per-level D_KL data (`all_temp_level_dict.jld2`) came from an **independent re-sampling +
 re-fitting sweep** (not a decomposition of the raw sweeps on Hugging Face), so it is committed here
-directly rather than pulled from the HF data.
-
-**Not yet migrated** (tracked for follow-up): **panel (e) of `nn_ising_kappa_C`** (C(τ=1), κ(τ=1) vs
-ground-truth T) — recomputed in the source from the raw fitted models via per-state
-heat-/cross-capacity. (Also: the faint energy-level gridlines in fig4 Panel A, from
-`make_hist_edges`, are omitted as cosmetic.)
+directly. The only omission from the published figures is the faint energy-level gridlines in fig4
+Panel A (from `make_hist_edges`), left out as cosmetic.
 
 ---
 
